@@ -12,6 +12,8 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'org.jetbrains.kotlin.jvm' version '2.0.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.0.0'
 }
 
 apply plugin: 'org.spongepowered.mixin'
@@ -75,6 +77,11 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     maven {
+        name = 'Kotlin for Forge'
+        url = 'https://thedarkcolour.github.io/KotlinForForge/'
+        content { includeGroup "thedarkcolour" }
+    }
+    maven {
         name "Modmaven"
         url "https://modmaven.dev/"
         content {
@@ -130,6 +137,7 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation "thedarkcolour:kotlinforforge:$kff_version"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     implementation fg.deobf("appeng:appliedenergistics2-forge:15.4.8")
     compileOnly fg.deobf("appeng:appliedenergistics2-forge:15.4.8:api")

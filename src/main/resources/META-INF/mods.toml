@@ -4,7 +4,7 @@
 # Note that there are a couple of TOML lists in this file.
 # Find more information on toml format here:  https://github.com/toml-lang/toml
 # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
-modLoader = "javafml" #mandatory
+modLoader = "kotlinforforge" #mandatory
 # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
 loaderVersion = "${loader_version_range}" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
 # The license for you mod. This is mandatory metadata and allows for easier comprehension of your redistributive properties.
@@ -77,5 +77,11 @@ side = "BOTH"
 modId = "packagedauto"
 mandatory = true
 versionRange = "[3.4.11,)"
+ordering = "NONE"
+side = "BOTH"
+[[dependencies."${mod_id}"]]
+modId = "kotlinforforge"
+mandatory = true
+versionRange = "[4.11.0,)"
 ordering = "NONE"
 side = "BOTH"
