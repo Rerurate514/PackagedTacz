@@ -9,7 +9,7 @@ import thedarkcolour.kotlinforforge.forge.MOD_BUS
 @Mod(Packagedtacz.ID)
 class Packagedtacz {
     companion object {
-        const val ID = "Packagedtacz"
+        const val ID = "packagedtacz"
         val LOGGER: Logger = LogManager.getLogger(ID)
     }
 
