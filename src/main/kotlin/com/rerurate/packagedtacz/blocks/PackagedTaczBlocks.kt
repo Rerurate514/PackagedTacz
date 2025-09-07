@@ -16,7 +16,12 @@ import java.util.function.Supplier
 import net.minecraft.world.inventory.MenuType
 import net.minecraftforge.network.IContainerFactory
 import com.rerurate.packagedtacz.containers.TaczMolecularAssemblerContainer
+import com.rerurate.packagedtacz.items.PackagedTaczItems.ITEMS
+import com.rerurate.packagedtacz.items.PackagedTaczItems.TABS
+import net.minecraft.network.chat.Component
 import net.minecraft.world.flag.FeatureFlags
+import net.minecraft.world.item.CreativeModeTab
+import net.minecraft.world.item.ItemStack
 
 object PackagedTaczBlocks {
     val BLOCKS: DeferredRegister<Block> = DeferredRegister.create(ForgeRegistries.BLOCKS, Packagedtacz.ID)
@@ -56,4 +61,18 @@ object PackagedTaczBlocks {
         BLOCKS.register(eventBus)
         CONTAINERS.register(eventBus)
     }
+
+    val CREATIVE_TAB: RegistryObject<CreativeModeTab?> = TABS.register(
+        "main",
+        {
+            CreativeModeTab.builder()
+                .title(Component.translatable("PackagedTacz"))
+                .icon { ItemStack(TACZ_MOLECULAR_ASSEMBLER.get()) }
+                .displayItems { _, output ->
+                    for (entry in ITEMS.entries) {
+                        output.accept(entry.get())
+                    }
+                }
+                .build()
+        })
 }

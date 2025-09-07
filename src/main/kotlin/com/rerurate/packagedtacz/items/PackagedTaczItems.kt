@@ -35,23 +35,4 @@ object PackagedTaczItems {
     fun properties(): Item.Properties {
         return Item.Properties()
     }
-
-    val CREATIVE_TAB: RegistryObject<CreativeModeTab?> = TABS.register(
-    "main",
-    {
-        CreativeModeTab.builder()
-            .title(Component.translatable("PackagedTacz"))
-            .icon { ItemStack(TACZ_MOLECULAR_ASSEMBLER.get()) }
-            .displayItems { _, output ->
-                for (entry in ITEMS.entries) {
-                    output.accept(entry.get())
-                }
-            }
-            .build()
-    })
-
-    val TACZ_MOLECULAR_ASSEMBLER: RegistryObject<Item?> = ITEMS.register(
-        "tacz_molecular_assembler_item",
-        { PackagedTaczItems.basic() }
-    )
 }
