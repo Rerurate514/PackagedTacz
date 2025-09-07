@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "packagedtacz:block/tacz_molecular_assembler"
+    }
+  }
+}
