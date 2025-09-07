@@ -13,15 +13,14 @@ import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
 import java.util.function.Supplier
-import com.rerurate.packagedtacz.blockEntities.TaczMolecularAssemblerBlockEntity
-import net.minecraft.core.BlockPos
-import net.minecraft.world.level.block.BaseEntityBlock
-import net.minecraft.world.level.block.RenderShape
-import net.minecraft.world.level.block.entity.BlockEntity
-import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.inventory.MenuType
+import net.minecraftforge.network.IContainerFactory
+import com.rerurate.packagedtacz.containers.TaczMolecularAssemblerContainer
+import net.minecraft.world.flag.FeatureFlags
 
 object PackagedTaczBlocks {
     val BLOCKS: DeferredRegister<Block> = DeferredRegister.create(ForgeRegistries.BLOCKS, Packagedtacz.ID)
+    val CONTAINERS: DeferredRegister<MenuType<*>> = DeferredRegister.create(ForgeRegistries.MENU_TYPES, Packagedtacz.ID)
 
     val TACZ_MOLECULAR_ASSEMBLER: RegistryObject<Block> =
         registerBlock("tacz_molecular_assembler",
@@ -32,6 +31,16 @@ object PackagedTaczBlocks {
                 .strength(1.5F)
                 .sound(SoundType.METAL))
     })
+
+    val TACZ_MOLECULAR_ASSEMBLER_CONTAINER =
+        CONTAINERS.register("tacz_molecular_assembler_container", Supplier {
+            MenuType(
+                IContainerFactory { windowId, inv, data ->
+                    TaczMolecularAssemblerContainer(windowId, inv, data.readBlockPos())
+                },
+                FeatureFlags.VANILLA_SET
+            )
+        })
 
     private fun <T : Block> registerBlock(name: String, block: Supplier<T>): RegistryObject<T> {
         val returnObj: RegistryObject<T> = BLOCKS.register(name, block)
