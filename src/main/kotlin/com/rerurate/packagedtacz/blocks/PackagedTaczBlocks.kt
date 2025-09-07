@@ -54,5 +54,6 @@ object PackagedTaczBlocks {
 
     fun initialize(eventBus: IEventBus) {
         BLOCKS.register(eventBus)
+        CONTAINERS.register(eventBus)
     }
 }

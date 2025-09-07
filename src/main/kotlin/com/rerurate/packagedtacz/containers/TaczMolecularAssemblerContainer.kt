@@ -25,7 +25,7 @@ class TaczMolecularAssemblerContainer(windowId: Int, inv: Inventory, private val
         blockEntity?.getRecipeHandler()?.ifPresent { handler ->
             for (row in 0..1) {
                 for (col in 0..8) {
-                    addSlot(RecipeSlot(handler, col + row * 9, 8 + col * 18, 18 + row * 18))
+                    addSlot(RecipeSlot(handler, col + row * 9, 8 + col * 18, 25 + row * 18))
                 }
             }
         }
