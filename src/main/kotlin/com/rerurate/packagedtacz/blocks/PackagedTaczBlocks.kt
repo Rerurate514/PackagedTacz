@@ -25,21 +25,13 @@ object PackagedTaczBlocks {
 
     val TACZ_MOLECULAR_ASSEMBLER: RegistryObject<Block> =
         registerBlock("tacz_molecular_assembler",
-            Supplier {
-                object : BaseEntityBlock(BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.COLOR_PURPLE)
-                    .randomTicks()
-                    .strength(1.5F)
-                    .sound(SoundType.METAL)) {
-                    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
-                        return TaczMolecularAssemblerBlockEntity(pos, state)
-                    }
-
-                    override fun getRenderShape(state: BlockState): RenderShape {
-                        return RenderShape.MODEL
-                    }
-                }
-            })
+    Supplier {
+            TaczMolecularAssembler(BlockBehaviour.Properties.of()
+                .mapColor(MapColor.COLOR_PURPLE)
+                .randomTicks()
+                .strength(1.5F)
+                .sound(SoundType.METAL))
+    })
 
     private fun <T : Block> registerBlock(name: String, block: Supplier<T>): RegistryObject<T> {
         val returnObj: RegistryObject<T> = BLOCKS.register(name, block)
