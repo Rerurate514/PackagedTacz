@@ -1,6 +1,6 @@
 package com.rerurate.packagedtacz.blockEntities
 
-import StackHelper
+import com.rerurate.packagedtacz.helpers.StackHelper
 import appeng.api.config.Actionable
 import appeng.api.config.PowerMultiplier
 import appeng.api.crafting.IPatternDetails
@@ -256,19 +256,16 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
     private fun removeStack(inventory: ItemStackHandler, stackToRemove: ItemStack) {
         var remainingToRemove = stackToRemove.count
 
-        // インベントリのスロットを逆順にループすることで、スタックが複数ある場合に効率的に削除できます
         for (i in inventory.slots - 1 downTo 0) {
             if (remainingToRemove <= 0) break
 
             val currentStack = inventory.getStackInSlot(i)
 
-            // アイテムの種類とNBTタグが一致するかを確認
             if (ItemStack.isSameItemSameTags(currentStack, stackToRemove)) {
                 val countToRemove = minOf(currentStack.count, remainingToRemove)
                 currentStack.shrink(countToRemove)
                 remainingToRemove -= countToRemove
 
-                // スロット内のアイテムが空になったら、スロットをクリア
                 if (currentStack.isEmpty) {
                     inventory.setStackInSlot(i, ItemStack.EMPTY)
                 }

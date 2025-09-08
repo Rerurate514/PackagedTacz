@@ -1,3 +1,5 @@
+package com.rerurate.packagedtacz.helpers
+
 import net.minecraft.world.item.ItemStack
 import thelm.packagedauto.api.IPackageRecipeInfo
 import net.minecraftforge.items.ItemStackHandler
