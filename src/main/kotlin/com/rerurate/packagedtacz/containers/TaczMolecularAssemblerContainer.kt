@@ -13,6 +13,14 @@ import net.minecraftforge.items.SlotItemHandler
 import thelm.packagedauto.item.RecipeHolderItem
 import com.rerurate.packagedtacz.blocks.PackagedTaczBlocks
 import com.rerurate.packagedtacz.blockEntities.TaczMolecularAssemblerBlockEntity
+import com.tacz.guns.api.TimelessAPI
+import com.tacz.guns.item.AmmoBoxItem
+import com.tacz.guns.item.AmmoItem
+import com.tacz.guns.item.AttachmentItem
+import com.tacz.guns.item.DefaultTableItem
+import com.tacz.guns.item.GunSmithTableItem
+import com.tacz.guns.item.ModernKineticGunItem
+import com.tacz.guns.item.TargetMinecartItem
 
 class TaczMolecularAssemblerContainer(windowId: Int, inv: Inventory, private val pos: BlockPos) : AbstractContainerMenu(
     PackagedTaczBlocks.TACZ_MOLECULAR_ASSEMBLER_CONTAINER.get(), windowId) {
@@ -23,11 +31,17 @@ class TaczMolecularAssemblerContainer(windowId: Int, inv: Inventory, private val
     init {
         addPlayerInventory(inv)
         blockEntity?.getRecipeHandler()?.ifPresent { handler ->
-            for (row in 0..1) {
-                for (col in 0..8) {
-                    addSlot(RecipeSlot(handler, col + row * 9, 8 + col * 18, 25 + row * 18))
-                }
+            addSlot(RecipeSlot(handler, 0, 44, 25))
+        }
+
+        blockEntity?.getMaterialsHandler()?.ifPresent { handler ->
+            for (col in 0..8) {
+                addSlot(SlotItemHandler(handler, col, 8 + col * 18, 54))
             }
+        }
+
+        blockEntity?.getOutputsHandler()?.ifPresent { handler ->
+            addSlot(OutputsSlot(handler, 0, 116, 25))
         }
     }
 
@@ -54,5 +68,11 @@ class TaczMolecularAssemblerContainer(windowId: Int, inv: Inventory, private val
 class RecipeSlot(itemHandler: IItemHandler, slot: Int, x: Int, y: Int) : SlotItemHandler(itemHandler, slot, x, y) {
     override fun mayPlace(stack: ItemStack): Boolean {
         return stack.item is RecipeHolderItem
+    }
+}
+
+class OutputsSlot(itemHandler: IItemHandler, slot: Int, x: Int, y: Int) : SlotItemHandler(itemHandler, slot, x, y) {
+    override fun mayPlace(stack: ItemStack): Boolean {
+        return stack.item is AmmoBoxItem || stack.item is AmmoItem || stack.item is AttachmentItem || stack.item is DefaultTableItem || stack.item is GunSmithTableItem || stack.item is ModernKineticGunItem || stack.item is TargetMinecartItem
     }
 }
