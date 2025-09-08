@@ -13,14 +13,6 @@ import net.minecraftforge.items.SlotItemHandler
 import thelm.packagedauto.item.RecipeHolderItem
 import com.rerurate.packagedtacz.blocks.PackagedTaczBlocks
 import com.rerurate.packagedtacz.blockEntities.TaczMolecularAssemblerBlockEntity
-import com.tacz.guns.api.TimelessAPI
-import com.tacz.guns.item.AmmoBoxItem
-import com.tacz.guns.item.AmmoItem
-import com.tacz.guns.item.AttachmentItem
-import com.tacz.guns.item.DefaultTableItem
-import com.tacz.guns.item.GunSmithTableItem
-import com.tacz.guns.item.ModernKineticGunItem
-import com.tacz.guns.item.TargetMinecartItem
 
 class TaczMolecularAssemblerContainer(windowId: Int, inv: Inventory, private val pos: BlockPos) : AbstractContainerMenu(
     PackagedTaczBlocks.TACZ_MOLECULAR_ASSEMBLER_CONTAINER.get(), windowId) {
@@ -36,7 +28,7 @@ class TaczMolecularAssemblerContainer(windowId: Int, inv: Inventory, private val
 
         blockEntity?.getMaterialsHandler()?.ifPresent { handler ->
             for (col in 0..8) {
-                addSlot(SlotItemHandler(handler, col, 8 + col * 18, 54))
+                addSlot(MaterialsSlot(handler, col, 8 + col * 18, 54))
             }
         }
 
@@ -71,8 +63,15 @@ class RecipeSlot(itemHandler: IItemHandler, slot: Int, x: Int, y: Int) : SlotIte
     }
 }
 
+class MaterialsSlot(itemHandler: IItemHandler, slot: Int, x: Int, y: Int) : SlotItemHandler(itemHandler, slot, x, y) {
+    override fun mayPlace(stack: ItemStack): Boolean {
+        return false
+    }
+}
+
 class OutputsSlot(itemHandler: IItemHandler, slot: Int, x: Int, y: Int) : SlotItemHandler(itemHandler, slot, x, y) {
     override fun mayPlace(stack: ItemStack): Boolean {
-        return stack.item is AmmoBoxItem || stack.item is AmmoItem || stack.item is AttachmentItem || stack.item is DefaultTableItem || stack.item is GunSmithTableItem || stack.item is ModernKineticGunItem || stack.item is TargetMinecartItem
+        return false
+        //return stack.item is AmmoBoxItem || stack.item is AmmoItem || stack.item is AttachmentItem || stack.item is DefaultTableItem || stack.item is GunSmithTableItem || stack.item is ModernKineticGunItem || stack.item is TargetMinecartItem
     }
 }
