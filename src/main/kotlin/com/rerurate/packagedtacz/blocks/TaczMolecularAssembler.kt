@@ -7,7 +7,6 @@ import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.BlockBehaviour
-import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.MenuProvider
@@ -26,6 +25,25 @@ class TaczMolecularAssembler(properties: BlockBehaviour.Properties) : BaseEntity
         return RenderShape.MODEL
     }
 
+    @Deprecated("Deprecated in Java")
+    override fun onRemove(
+        blockState: BlockState,
+        level: Level,
+        pos: BlockPos,
+        state: BlockState,
+        isMoving: Boolean,
+    ) {
+        if (!blockState.`is`(state.block)) {
+            val blockEntity = level.getBlockEntity(pos)
+            if (blockEntity is TaczMolecularAssemblerBlockEntity) {
+                blockEntity.dropAllItems(level, pos)
+            }
+        }
+
+        super.onRemove(blockState, level, pos, state, isMoving)
+    }
+
+    @Deprecated("Deprecated in Java")
     override fun use(state: BlockState, level: Level, pos: BlockPos, player: Player, hand: InteractionHand, hitResult: BlockHitResult): InteractionResult {
         if (!level.isClientSide) {
             val blockEntity = level.getBlockEntity(pos)
