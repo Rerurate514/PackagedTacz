@@ -10,6 +10,7 @@ import appeng.api.implementations.blockentities.PatternContainerGroup
 import appeng.api.inventories.InternalInventory
 import appeng.api.networking.IGridNode
 import appeng.api.networking.IGridNodeListener
+import appeng.api.networking.security.IActionSource
 import appeng.api.networking.ticking.IGridTickable
 import appeng.api.networking.ticking.TickRateModulation
 import appeng.api.networking.ticking.TickingRequest
@@ -42,6 +43,7 @@ import thelm.packagedauto.api.IPackageRecipeInfo
 import thelm.packagedauto.api.IPackageRecipeList
 import thelm.packagedauto.item.RecipeHolderItem
 import java.util.logging.Logger
+import kotlin.math.log
 
 class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
     MenuProvider,
@@ -52,10 +54,11 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
 {
     private val internalInv = AppEngInternalInventory(this, 256, 64)
     private var isPowered = false
+    private var isBusy = false
 
     val logger = Logger.getLogger("TaczMolecularAssemblerBlockEntity")
 
-    private val recipeHandler = object : ItemStackHandler(18) {
+    private val recipeHandler = object : ItemStackHandler(1) {
         override fun isItemValid(slot: Int, stack: ItemStack): Boolean {
             return stack.item is RecipeHolderItem
         }
@@ -68,19 +71,32 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
     }
     private val recipeHandlerOptional = LazyOptional.of { recipeHandler as IItemHandler }
 
-    private val materialsHandler = ItemStackHandler(10) // 9 for materials, 1 for output
+    private val materialsHandler = object : ItemStackHandler(9) {
+        override fun getSlotLimit(slot: Int): Int {
+            return 65535
+        }
+    }
     private val materialsHandlerOptional = LazyOptional.of { materialsHandler as IItemHandler }
 
-    private val outputsHandler = ItemStackHandler(256)
+    private val outputsHandler = ItemStackHandler(1)
     private val outputsHandlerOptional = LazyOptional.of { outputsHandler as IItemHandler }
 
     init {
         getMainNode().addService(IGridTickable::class.java, this)
         getMainNode().setIdlePowerUsage(0.0)
+        logger.info("server lel")
     }
 
     fun getRecipeHandler(): LazyOptional<IItemHandler> {
         return recipeHandlerOptional
+    }
+
+    fun getMaterialsHandler(): LazyOptional<IItemHandler> {
+        return materialsHandlerOptional
+    }
+
+    fun getOutputsHandler(): LazyOptional<IItemHandler> {
+        return outputsHandlerOptional
     }
 
     override fun saveAdditional(tag: CompoundTag) {
@@ -164,15 +180,25 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     override fun pushPattern(
-        p0: IPatternDetails?,
-        p1: Array<out KeyCounter?>?,
-        p2: Direction?
+        patternDetails: IPatternDetails?,
+        table: Array<out KeyCounter?>?,
+        where: Direction?
     ): Boolean {
+//        if (!this.acceptsPlans()) return false
+//
+//        var craftingResult = false
+//
+//        if (level != null && !level!!.isClientSide) {
+//            craftingResult = serverTick()
+//        }
+//
+//        return craftingResult
         return false
     }
 
     override fun acceptsPlans(): Boolean {
         return false
+        //return !isBusy
     }
 
     override fun isPowered(): Boolean {
@@ -195,43 +221,67 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
         if (level != null && !level!!.isClientSide) {
             serverTick()
         }
+
         return TickRateModulation.IDLE
     }
 
-    fun serverTick() {
-        if (isPowered && outputsHandler.getStackInSlot(1).isEmpty) {
-            for (i in 0 until recipeHandler.slots) {
-                val recipeStack = recipeHandler.getStackInSlot(i)
-                //logger.log(java.util.logging.Level.INFO, recipeStack.item.description.string)
-                if (recipeStack.item is RecipeHolderItem) {
-                    val recipeHolder = recipeStack.item as RecipeHolderItem
-                    val recipes: IPackageRecipeList? = recipeHolder.getRecipeList(recipeStack)
-                    val recipe: IPackageRecipeInfo? = recipes?.let { it.recipeList[0] }
-                    if (recipe != null) {
-                        val remainingItems = craft(recipe)
-                        if (remainingItems.isEmpty()) {
-                            //succeed crafting
-                            return
-                        }
+    fun serverTick(): Boolean {
+        if (isPowered) {
+            val recipeStack = recipeHandler.getStackInSlot(0)
+            if (outputsHandler.getStackInSlot(0).isEmpty && recipeStack.item is RecipeHolderItem) {
+                val recipeHolder = recipeStack.item as RecipeHolderItem
+                val recipes: IPackageRecipeList? = recipeHolder.getRecipeList(recipeStack)
+                val recipe: IPackageRecipeInfo? = recipes?.recipeList?.firstOrNull()
+                if (recipe != null) {
+                    val remainingItems = craft(recipe)
+                    if (remainingItems.isEmpty()) {
+                        //succeed crafting
+                        return true
                     }
                 }
             }
         }
 
-        if (!materialsHandler.getStackInSlot(9).isEmpty) {
-            ejectItem()
+        if (!outputsHandler.getStackInSlot(0).isEmpty) {
+            importItemToME()
         }
+
+        return false
     }
 
     fun ejectItem() {
-        val outputStack = materialsHandler.getStackInSlot(9)
+        val outputStack = outputsHandler.getStackInSlot(0)
         if (!outputStack.isEmpty) {
             val direction = Direction.DOWN
             val targetPos = blockPos.relative(direction)
             Containers.dropItemStack(level, targetPos.x.toDouble(), targetPos.y.toDouble(), targetPos.z.toDouble(), outputStack)
-            materialsHandler.setStackInSlot(9, ItemStack.EMPTY) // スロットをクリア
+            outputsHandler.setStackInSlot(0, ItemStack.EMPTY) // スロットをクリア
             setChanged()
         }
+    }
+
+    private fun importItemToME(){
+        val outputStack = outputsHandler.getStackInSlot(0)
+        if(outputStack.isEmpty){
+            return
+        }
+
+        val grid = mainNode.grid ?: return
+
+        val storageService = grid.storageService ?: return
+
+        val remainingStack = storageService.inventory.insert(
+            AEItemKey.of(outputStack),
+            outputStack.count.toLong(),
+            Actionable.MODULATE,
+            IActionSource.empty()
+        )
+
+        logger.info(remainingStack.toString())
+
+        outputsHandler.setStackInSlot(0, ItemStack.EMPTY)
+
+        setChanged()
     }
 
     private fun craft(recipe: IPackageRecipeInfo): List<ItemStack> {
@@ -243,8 +293,8 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
             }
 
             val outputs = recipe.outputs
-            if (!outputs.isEmpty()) {
-                materialsHandler.setStackInSlot(9, outputs[0].copy())
+            if (outputs.isNotEmpty()) {
+                outputsHandler.setStackInSlot(0, outputs[0].copy())
             }
 
             return emptyList()
