@@ -1,0 +1,8 @@
+{
+  "parent": "block/cube_bottom_top",
+  "textures": {
+    "side": "packagedtacz:block/tacz_molecular_assembler_side",
+    "top": "packagedtacz:block/tacz_molecular_assembler_top",
+    "bottom": "packagedtacz:block/machine_bottom"
+  }
+}
