@@ -23,6 +23,7 @@ https://www.youtube.com/watch?v=38SgBBVkk00
 ### advanced usecase - inifinity ammo by auto-crafting
 https://youtu.be/xZIkBIMM-3E
 
-Developer Notes: This mod was created for personal use and is currently only available for Minecraft 1.20.1 with Forge. No plans for Fabric ports or other versions at this time.
+### Developer Notes
+This mod was created for personal use and is currently only available for Minecraft 1.20.1 with Forge. No plans for Fabric ports or other versions at this time.
 
 Check JEI for crafting recipes!
