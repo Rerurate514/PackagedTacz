@@ -3,10 +3,7 @@ package com.rerurate.packagedtacz.blockEntities
 import com.rerurate.packagedtacz.helpers.StackHelper
 import appeng.api.config.Actionable
 import appeng.api.config.PowerMultiplier
-import appeng.api.crafting.IPatternDetails
 import appeng.api.implementations.IPowerChannelState
-import appeng.api.implementations.blockentities.ICraftingMachine
-import appeng.api.implementations.blockentities.PatternContainerGroup
 import appeng.api.inventories.InternalInventory
 import appeng.api.networking.IGridNode
 import appeng.api.networking.IGridNodeListener
@@ -15,12 +12,12 @@ import appeng.api.networking.ticking.IGridTickable
 import appeng.api.networking.ticking.TickRateModulation
 import appeng.api.networking.ticking.TickingRequest
 import appeng.api.stacks.AEItemKey
-import appeng.api.stacks.KeyCounter
+import appeng.api.stacks.AEKey
 import appeng.api.util.AECableType
 import appeng.blockentity.grid.AENetworkInvBlockEntity
-import appeng.core.definitions.AEBlocks
 import appeng.util.inv.AppEngInternalInventory
 import com.rerurate.packagedtacz.containers.TaczMolecularAssemblerContainer
+import com.rerurate.packagedtacz.helpers.CraftingJobsHelper
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.nbt.CompoundTag
@@ -43,18 +40,16 @@ import thelm.packagedauto.api.IPackageRecipeInfo
 import thelm.packagedauto.api.IPackageRecipeList
 import thelm.packagedauto.item.RecipeHolderItem
 import java.util.logging.Logger
-import kotlin.math.log
 
 class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
     MenuProvider,
     AENetworkInvBlockEntity(PackagedTaczBlockEntities.TACZ_MOLECULAR_ASSEMBLER.get(), pos, state),
-    ICraftingMachine,
     IPowerChannelState,
     IGridTickable
 {
     private val internalInv = AppEngInternalInventory(this, 256, 64)
     private var isPowered = false
-    private var isBusy = false
+    private var _isBusy = false
 
     val logger = Logger.getLogger("TaczMolecularAssemblerBlockEntity")
 
@@ -82,9 +77,8 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
     private val outputsHandlerOptional = LazyOptional.of { outputsHandler as IItemHandler }
 
     init {
-        getMainNode().addService(IGridTickable::class.java, this)
-        getMainNode().setIdlePowerUsage(0.0)
-        logger.info("server lel")
+        mainNode.addService(IGridTickable::class.java, this)
+        mainNode.setIdlePowerUsage(0.0)
     }
 
     fun getRecipeHandler(): LazyOptional<IItemHandler> {
@@ -165,42 +159,6 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
         // No-op. Ticking logic handles this.
     }
 
-    override fun getCraftingMachineInfo(): PatternContainerGroup {
-        val icon = AEItemKey.of(AEBlocks.MOLECULAR_ASSEMBLER)
-
-        val name = if (hasCustomName()) {
-            customName
-        } else {
-            AEBlocks.MOLECULAR_ASSEMBLER.asItem().description
-        }
-
-        val tooltip = listOf<Component>()
-
-        return PatternContainerGroup(icon, name, tooltip)
-    }
-
-    override fun pushPattern(
-        patternDetails: IPatternDetails?,
-        table: Array<out KeyCounter?>?,
-        where: Direction?
-    ): Boolean {
-//        if (!this.acceptsPlans()) return false
-//
-//        var craftingResult = false
-//
-//        if (level != null && !level!!.isClientSide) {
-//            craftingResult = serverTick()
-//        }
-//
-//        return craftingResult
-        return false
-    }
-
-    override fun acceptsPlans(): Boolean {
-        return false
-        //return !isBusy
-    }
-
     override fun isPowered(): Boolean {
         return isPowered
     }
@@ -226,42 +184,58 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
     }
 
     fun serverTick(): Boolean {
+        val jobsHelper = CraftingJobsHelper()
+        val jobs = mainNode?.grid?.let { jobsHelper.getCraftingJobs(it) }
+
+        if(jobs == null) {
+            ejectMaterialItem()
+            return false
+        }
+
         if (isPowered) {
             val recipeStack = recipeHandler.getStackInSlot(0)
             if (outputsHandler.getStackInSlot(0).isEmpty && recipeStack.item is RecipeHolderItem) {
                 val recipeHolder = recipeStack.item as RecipeHolderItem
                 val recipes: IPackageRecipeList? = recipeHolder.getRecipeList(recipeStack)
-                val recipe: IPackageRecipeInfo? = recipes?.recipeList?.firstOrNull()
-                if (recipe != null) {
-                    val remainingItems = craft(recipe)
-                    if (remainingItems.isEmpty()) {
-                        //succeed crafting
-                        return true
+                val recipeList = recipes?.recipeList
+
+                if (recipeList == null) return false
+                if (recipeList.isEmpty()) return false
+
+                for((aeKey, _) in jobs) {
+                    for(recipe in recipeList) {
+                        if(isEqualsAEKeyAndRecipeInfo(aeKey, recipe)) {
+                            val remainingItems = craft(recipe)
+                            if (remainingItems.isEmpty()) {
+                                return true //succeed crafting
+                            }
+                        }
                     }
                 }
             }
         }
 
-        if (!outputsHandler.getStackInSlot(0).isEmpty) {
-            importItemToME()
-        }
+        ejectCraftedItem()
 
         return false
     }
 
-    fun ejectItem() {
-        val outputStack = outputsHandler.getStackInSlot(0)
-        if (!outputStack.isEmpty) {
-            val direction = Direction.DOWN
-            val targetPos = blockPos.relative(direction)
-            Containers.dropItemStack(level, targetPos.x.toDouble(), targetPos.y.toDouble(), targetPos.z.toDouble(), outputStack)
-            outputsHandler.setStackInSlot(0, ItemStack.EMPTY) // スロットをクリア
-            setChanged()
+    private fun isEqualsAEKeyAndRecipeInfo(aeKey: AEKey, recipe: IPackageRecipeInfo): Boolean{
+        return aeKey.wrapForDisplayOrFilter().displayName.string == recipe.outputs[0].displayName.string
+    }
+
+    private fun ejectMaterialItem(){
+        importItemToME(materialsHandler)
+    }
+
+    private fun ejectCraftedItem(){
+        if (!outputsHandler.getStackInSlot(0).isEmpty) {
+            importItemToME(outputsHandler)
         }
     }
 
-    private fun importItemToME(){
-        val outputStack = outputsHandler.getStackInSlot(0)
+    private fun importItemToME(handler: ItemStackHandler){
+        val outputStack = handler.getStackInSlot(0)
         if(outputStack.isEmpty){
             return
         }
@@ -270,16 +244,14 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
 
         val storageService = grid.storageService ?: return
 
-        val remainingStack = storageService.inventory.insert(
+        storageService.inventory.insert(
             AEItemKey.of(outputStack),
             outputStack.count.toLong(),
             Actionable.MODULATE,
             IActionSource.empty()
         )
 
-        logger.info(remainingStack.toString())
-
-        outputsHandler.setStackInSlot(0, ItemStack.EMPTY)
+        handler.setStackInSlot(0, ItemStack.EMPTY)
 
         setChanged()
     }
