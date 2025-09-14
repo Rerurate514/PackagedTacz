@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "packagedauto:crafter"
+    },
+    "g": {
+      "item": "tacz:gun_smith_table"
+    },
+    "i": {
+      "item": "minecraft:iron_ingot"
+    },
+    "r": {
+      "item": "minecraft:repeater"
+    },
+    "w": {
+      "item": "minecraft:crafting_table"
+    }
+  },
+  "pattern": [
+    "iCi",
+    "wgw",
+    "iri"
+  ],
+  "result": {
+    "item": "packagedtacz:tacz_molecular_assembler"
+  },
+  "show_notification": true
+}
