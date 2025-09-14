@@ -27,3 +27,6 @@ https://youtu.be/xZIkBIMM-3E
 This mod was created for personal use and is currently only available for Minecraft 1.20.1 with Forge. No plans for Fabric ports or other versions at this time.
 
 Check JEI for crafting recipes!
+
+<img width="442" height="214" alt="image" src="https://github.com/user-attachments/assets/a4b0d670-96e5-4ce6-9f64-86c8d8b51cd6" />
+
