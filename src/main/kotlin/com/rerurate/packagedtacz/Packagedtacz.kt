@@ -18,12 +18,10 @@ import thedarkcolour.kotlinforforge.forge.MOD_BUS
 class Packagedtacz {
     companion object {
         const val ID = "packagedtacz"
-        val LOGGER: Logger = LogManager.getLogger(ID)
     }
 
     init {
-        //A1TICItems.initialize(MOD_BUS)
-        //MOD_BUS.register(ModDataGenerators::class.java)
+        MOD_BUS.register(ModDataGenerators::class.java)
         MOD_BUS.register(this)
         PackagedTaczItems.initialize(MOD_BUS)
         PackagedTaczBlocks.initialize(MOD_BUS)
