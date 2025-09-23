@@ -14,8 +14,10 @@ import appeng.api.networking.ticking.TickingRequest
 import appeng.api.stacks.AEItemKey
 import appeng.api.stacks.AEKey
 import appeng.api.util.AECableType
+import appeng.api.util.AEColor
 import appeng.blockentity.grid.AENetworkInvBlockEntity
 import appeng.util.inv.AppEngInternalInventory
+import com.rerurate.packagedtacz.blocks.PackagedTaczBlocks
 import com.rerurate.packagedtacz.containers.TaczMolecularAssemblerContainer
 import com.rerurate.packagedtacz.helpers.CraftingJobsHelper
 import net.minecraft.core.BlockPos
@@ -77,8 +79,16 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
     private val outputsHandlerOptional = LazyOptional.of { outputsHandler as IItemHandler }
 
     init {
+        setMainNode()
+    }
+
+    private fun setMainNode() {
         mainNode.addService(IGridTickable::class.java, this)
-        mainNode.setIdlePowerUsage(0.0)
+        mainNode.setTagName("Node")
+        mainNode.setVisualRepresentation(PackagedTaczBlocks.TACZ_MOLECULAR_ASSEMBLER.get())
+        mainNode.setGridColor(AEColor.TRANSPARENT)
+        mainNode.setIdlePowerUsage(2.0)
+        mainNode.setInWorldNode(true)
     }
 
     fun getRecipeHandler(): LazyOptional<IItemHandler> {
