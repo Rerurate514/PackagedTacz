@@ -38,6 +38,7 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities
 import net.minecraftforge.common.util.LazyOptional
 import net.minecraftforge.items.IItemHandler
 import net.minecraftforge.items.ItemStackHandler
+import net.minecraftforge.registries.ForgeRegistries
 import thelm.packagedauto.api.IPackageRecipeInfo
 import thelm.packagedauto.api.IPackageRecipeList
 import thelm.packagedauto.item.RecipeHolderItem
@@ -214,6 +215,7 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
 
                 for((aeKey, _) in jobs) {
                     for(recipe in recipeList) {
+                        if(!isTaczItems(recipe)) return false
                         if(isEqualsAEKeyAndRecipeInfo(aeKey, recipe)) {
                             val remainingItems = craft(recipe)
                             if (remainingItems.isEmpty()) {
@@ -232,6 +234,18 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
 
     private fun isEqualsAEKeyAndRecipeInfo(aeKey: AEKey, recipe: IPackageRecipeInfo): Boolean{
         return aeKey.wrapForDisplayOrFilter().displayName.string == recipe.outputs[0].displayName.string
+    }
+
+    private fun isTaczItems(recipe: IPackageRecipeInfo): Boolean {
+        val stack = recipe.outputs[0].copy()
+        if(stack.isEmpty) return false
+
+        val rl = ForgeRegistries.ITEMS.getKey(stack.item)
+        if(rl == null) return false
+
+        val modid = rl.namespace
+        System.out.println("${modid}: ${stack.item} ====== ${modid.equals("tacz")}")
+        return modid.equals("tacz")
     }
 
     private fun ejectMaterialItem(){
