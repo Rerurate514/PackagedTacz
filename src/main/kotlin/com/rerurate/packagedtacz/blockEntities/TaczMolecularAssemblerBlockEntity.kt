@@ -244,7 +244,6 @@ class TaczMolecularAssemblerBlockEntity(pos: BlockPos, state: BlockState) :
         if(rl == null) return false
 
         val modid = rl.namespace
-        System.out.println("${modid}: ${stack.item} ====== ${modid.equals("tacz")}")
         return modid.equals("tacz")
     }
 
